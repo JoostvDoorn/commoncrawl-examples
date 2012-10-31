@@ -53,7 +53,7 @@ public class ExampleTextWordCount extends Configured implements Tool {
 
     private StringTokenizer tokenizer;
     private Text outKey = new Text();
-    private LongWritable outVal = new LongWritable();
+    private LongWritable outVal = new LongWritable(1);
 
     @Override
     public void map(Text key, Text value, Context context)
@@ -68,7 +68,6 @@ public class ExampleTextWordCount extends Configured implements Tool {
         } else {
           while (tokenizer.hasMoreTokens()) {
             outKey.set(tokenizer.nextToken());
-            outVal.set(1);
             context.write(outKey, outVal);
           }
         }
@@ -81,7 +80,7 @@ public class ExampleTextWordCount extends Configured implements Tool {
   }
 
   /**
-   * Hadoop FileSystem PathFilter for ARC files, allowing users to limit the
+   * Hadoop FileSystem PathFilter for TextData files, allowing users to limit the
    * number of files processed.
    *
    * @author Chris Stephens <chris@commoncrawl.org>
