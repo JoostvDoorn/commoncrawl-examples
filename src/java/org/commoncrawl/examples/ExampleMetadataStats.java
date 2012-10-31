@@ -1,6 +1,5 @@
 package org.commoncrawl.examples;
 
-// Java classes
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -9,19 +8,17 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
-import org.apache.hadoop.mapred.lib.LongSumReducer;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.reduce.LongSumReducer;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -29,10 +26,6 @@ import org.apache.log4j.Logger;
 import com.google.common.net.InternetDomainName;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-// Apache Project classes
-// Hadoop classes
-// Google Gson classes
-// Google Guava classes
 
 /**
  * An example showing how to use the Common Crawl 'metadata' files to quickly
@@ -40,121 +33,181 @@ import com.google.gson.JsonParser;
  * 
  * @author Chris Stephens <chris@commoncrawl.org>
  */
-public class ExampleMetadataStats
-    extends    Configured
-    implements Tool {
+public class ExampleMetadataStats extends Configured implements Tool {
 
   private static final Logger LOG = Logger.getLogger(ExampleMetadataStats.class);
+  private static final String ARGNAME_INPATH = "-in";
+  private static final String ARGNAME_OUTPATH = "-out";
+  private static final String ARGNAME_CONF = "-conf";
+  private static final String ARGNAME_OVERWRITE = "-overwrite";
+  private static final String ARGNAME_MAXFILES = "-maxfiles";
+  private static final String ARGNAME_NUMREDUCE = "-numreducers";
+  
+  protected static enum MAPPERCOUNTER {
+    INVALID_URLS,
+    EXCEPTIONS
+  }
 
   /**
    * Mapping class that produces statistics about the Common Crawl corpus.
    */ 
   public static class ExampleMetadataStatsMapper
-      extends    MapReduceBase
-      implements Mapper<Text, Text, Text, LongWritable> {
-
-    // create a counter group for Mapper-specific statistics
-    private final String _counterGroup = "Custom Mapper Counters";
-
-    // implement the main "map" function
-    public void map(Text key, Text value, OutputCollector<Text, LongWritable> output, Reporter reporter)
-        throws IOException {
+      extends Mapper<Text, Text, Text, LongWritable> {
+    
+    private Text outKey = new Text();
+    private static final Text outKeyPReqTotal = new Text("Pages Requested\tTotal");
+    private LongWritable outVal = new LongWritable(1);
+    
+    private String url;
+    private String json;
+    private String disposition;
+    private String httpResult;
+    private URI uri;
+    private String host;
+    private InternetDomainName domainName;
+    private String mimeType;
+    private String publicSuffix;
+    private String charset;
+    
+    private static final JsonParser jsonParser = new JsonParser();
+    private JsonObject jsonObj;
+    
+    @Override
+    public void map(Text key, Text value, Context context) throws IOException {
 
       // key & value are "Text" right now ...
-      String url   = key.toString();
-      String json  = value.toString();
+      url   = key.toString();
+      json  = value.toString();
+      disposition = "[no status]";
+      httpResult = "[missing]";
+      publicSuffix = "[none]";
+      mimeType = "[missing]";
+      charset = "[missing]";
 
       try {
  
         // See if the page has a successful HTTP code
-        JsonParser jsonParser = new JsonParser();
-        JsonObject jsonObj    = jsonParser.parse(json).getAsJsonObject();
-
-        boolean isSuccessful = false;
-
-        String disposition = "[no status]";
+        jsonObj = jsonParser.parse(json).getAsJsonObject();
  
-        if (jsonObj.has("disposition"))
-        {
+        if (jsonObj.has("disposition")) {
           disposition = jsonObj.get("disposition").getAsString().trim().toUpperCase();
+        }
 
-          if (disposition.equals("SUCCESS"))
-            isSuccessful = true;
+        if (jsonObj.has("http_result")) {
+          httpResult = jsonObj.get("http_result").getAsString().trim().toUpperCase();
         }
 
         // Output a basic page count
-        output.collect(new Text("Pages Requested\tTotal"), new LongWritable(1));
-
-        output.collect(new Text("Pages Requested\t"+disposition), new LongWritable(1));
-
-        // Output the HTTP result
-        String httpResult = "[missing]";
-
-        if (jsonObj.has("http_result"))
-          httpResult = jsonObj.get("http_result").getAsString().trim().toUpperCase();
-
-        output.collect(new Text("HTTP Code\t"+httpResult+" ("+disposition+")"), new LongWritable(1));
+        context.write(outKeyPReqTotal, outVal);
+        outKey.set("Pages Requested\t"+disposition);
+        context.write(outKey, outVal);
+        outKey.set("HTTP Code\t"+httpResult+" ("+disposition+")");
+        context.write(outKey, outVal);
 
         // If the request was not successful, move to the next record
-        if (isSuccessful == false)
+        if (!disposition.equals("SUCCESS")) {
           return;
+        }
 
         // Gather the host name
         try {
 
-          URI uri = new URI(url);
-          String host = uri.getHost();
+          uri = new URI(url);
+          host = uri.getHost();
 
-          if (host == null || host.equals(""))
+          if (host == null || host.equals("")) {
             throw new URISyntaxException(url, "Unable to gather host or no host found");
+          }
 
           // Gather the domain object
-          InternetDomainName domainObj = InternetDomainName.from(host);
+          domainName = InternetDomainName.from(host);
 
           // Output the TLD
-          String publicSuffix = "[none]";
+          if (domainName.hasPublicSuffix()) {
+            publicSuffix = domainName.publicSuffix().name().trim().toLowerCase();
+          }
 
-          if (domainObj.hasPublicSuffix())
-            publicSuffix = domainObj.publicSuffix().name().trim().toLowerCase();
-
-          output.collect(new Text("TLD\t"+publicSuffix), new LongWritable(1));
+          outKey.set("TLD\t"+publicSuffix);
+          context.write(outKey, outVal);
 
         }
         catch (URISyntaxException ex) {
-          output.collect(new Text("TLD\t[invalid URL]"), new LongWritable(1));
-          reporter.incrCounter(this._counterGroup, "Invalid URLs", 1);
+          outKey.set("TLD\t[invalid URL]");
+          context.write(outKey, outVal);
+          context.getCounter(MAPPERCOUNTER.INVALID_URLS).increment(1);
         }
  
-        // Output MIME Type
-        String mimeType = "[missing]";
-
-        if (jsonObj.has("mime_type"))
+        if (jsonObj.has("mime_type")) {
           mimeType = jsonObj.get("mime_type").getAsString().trim().toLowerCase();
+        }
 
-        output.collect(new Text("Type\t"+mimeType), new LongWritable(1));
-
-        // Output Charset
-        String charset = "[missing]";
-
-        if (jsonObj.has("charset_detected"))
+        if (jsonObj.has("charset_detected")) {
           charset = jsonObj.get("charset_detected").getAsString().trim().toUpperCase();
+        }
+        
+        if (jsonObj.has("download_size") == true) {
+          context.write(new Text("Content Size\t"), new LongWritable(jsonObj.get("download_size").getAsInt()));
+        }
 
-        output.collect(new Text("Charset\t"+charset), new LongWritable(1));
+        outKey.set("Charset\t"+charset);
+        context.write(outKey, outVal);
+        outKey.set("Type\t"+mimeType);
+        context.write(outKey, outVal);
 
-        // Download Size
-        if (jsonObj.has("download_size") == true)
-          output.collect(new Text("Content Size\t"), new LongWritable(jsonObj.get("download_size").getAsInt()));
       }
       catch (IOException ex) {
         throw ex;
       }
       catch (Exception ex) {
         LOG.error("Caught Exception", ex); 
-        reporter.incrCounter(this._counterGroup, "Exceptions", 1);
+        context.getCounter(MAPPERCOUNTER.EXCEPTIONS).increment(1);
       }
     }
   }
+  
+  /**
+   * Hadoop FileSystem PathFilter for MetaData files, allowing users to limit the
+   * number of files processed.
+   *
+   * @author Chris Stephens <chris@commoncrawl.org>
+   */
+  protected static class SampleFilter
+      implements PathFilter {
 
+    private static int count =  0;
+    private static long max   = -1;
+    
+    protected static void setMax(long newmax) {
+      max = newmax;
+    }
+
+    @Override
+    public boolean accept(Path path) {
+
+      if (!path.getName().startsWith("metadata-"))
+        return false;
+
+      count++;
+      
+      if (max < 0 || count > max)
+        return false;
+
+      return true;
+    }
+  }
+
+  public void usage() {
+    System.out.println("\n  org.commoncrawl.examples.ExampleMetadataStats \n" +
+                         "                           " + ARGNAME_INPATH +" <inputpath>\n" +
+                         "                           " + ARGNAME_OUTPATH + " <outputpath>\n" +
+                         "                         [ " + ARGNAME_OVERWRITE + " ]\n" +
+                         "                         [ " + ARGNAME_NUMREDUCE + " <number_of_reducers> ]\n" +
+                         "                         [ " + ARGNAME_CONF + " <conffile> ]\n" +
+                         "                         [ " + ARGNAME_MAXFILES + " <maxfiles> ]");
+    System.out.println("");
+    GenericOptionsParser.printGenericCommandUsage(System.out);
+  }
+  
   /**
    * Implmentation of Tool.run() method, which builds and runs the Hadoop job.
    *
@@ -163,51 +216,68 @@ public class ExampleMetadataStats
    * @return      0 if the Hadoop job completes successfully, 1 if not. 
    */
   @Override
-  public int run(String[] args)
-      throws Exception {
+  public int run(String[] args) throws Exception {
 
-    String baseInputPath = null;
-    String outputPath    = null;
+    String inputPath = null;
+    String outputPath = null;
+    String configFile = null;
+    boolean overwrite = false;
+    int numReducers = 1;
 
-    // Read the command line arguments.
-    if (args.length < 1)
-      throw new IllegalArgumentException("'run()' must be passed an output path.");
-
-    outputPath = args[0];
-
+    // Read the command line arguments. We're not using GenericOptionsParser
+    // to prevent having to include commons.cli as a dependency.
+    for (int i = 0; i < args.length; i++) {
+      try {
+        if (args[i].equals(ARGNAME_INPATH)) {
+          inputPath = args[++i];
+        } else if (args[i].equals(ARGNAME_OUTPATH)) {
+          outputPath = args[++i];
+        } else if (args[i].equals(ARGNAME_CONF)) {
+          configFile = args[++i];
+        } else if (args[i].equals(ARGNAME_MAXFILES)) {
+          SampleFilter.setMax(Long.parseLong(args[++i]));
+        } else if (args[i].equals(ARGNAME_OVERWRITE)) {
+          overwrite = true;
+        } else if (args[i].equals(ARGNAME_NUMREDUCE)) {
+          numReducers = Integer.parseInt(args[++i]);
+        } else {
+          LOG.warn("Unsupported argument: " + args[i]);
+        }
+      } catch (ArrayIndexOutOfBoundsException e) {
+        usage();
+        throw new IllegalArgumentException();
+      }
+    }
+    
+    if (inputPath == null || outputPath == null) {
+      usage();
+      throw new IllegalArgumentException();
+    }
+    
+    // Read in any additional config parameters.
+    if (configFile != null) {
+      LOG.info("adding config parameters from '"+ configFile + "'");
+      this.getConf().addResource(configFile);
+    }
+    
     // Creates a new job configuration for this Hadoop job.
-    JobConf job = new JobConf(this.getConf());
-
+    Configuration conf = getConf();
+    Job job = new Job(conf);
     job.setJarByClass(ExampleMetadataStats.class);
-
-    baseInputPath = "s3n://aws-publicdatasets/common-crawl/parse-output/segment";
-
-    FileSystem fs = null;
-
-    // If you would like to process all segments, comment this out and
-    // uncomment the block of code below
-    String inputPath = baseInputPath + "/1341690154994/metadata-00062";
+    job.setNumReduceTasks(numReducers);
 
     LOG.info("adding input path '" + inputPath + "'");
     FileInputFormat.addInputPath(job, new Path(inputPath));
-    /*
-    fs = FileSystem.get(new URI("s3n://aws-publicdatasets"), job);
+    FileInputFormat.setInputPathFilter(job, SampleFilter.class);
 
-    for (FileStatus fileStatus : fs.globStatus(new Path("/common-crawl/parse-output/valid_segments/[0-9]*"))) { 
-      String[] parts = fileStatus.getPath().toString().split("/");
-      String inputPath = baseInputPath + "/" + parts[parts.length-1] + "/metadata-*";
-      LOG.info("adding input path '" + inputPath + "'");
-      FileInputFormat.addInputPath(job, new Path(inputPath));
+    // Delete the output path directory if it already exists and user wants to overwrite it.
+    if (overwrite) {
+      LOG.info("clearing the output path at '" + outputPath + "'");
+      FileSystem fs = FileSystem.get(new URI(outputPath), conf);
+      if (fs.exists(new Path(outputPath))) {
+        fs.delete(new Path(outputPath), true);
+      }
     }
-    */
-
-    // Delete the output path directory if it already exists.
-    LOG.info("clearing the output path at '" + outputPath + "'");
-
-    fs = FileSystem.get(new URI(outputPath), job);
-
-    if (fs.exists(new Path(outputPath)))
-      fs.delete(new Path(outputPath), true);
 
     // Set the path where final output 'part' files will be saved.
     LOG.info("setting output path to '" + outputPath + "'");
@@ -215,10 +285,10 @@ public class ExampleMetadataStats
     FileOutputFormat.setCompressOutput(job, false);
 
     // Set which InputFormat class to use.
-    job.setInputFormat(SequenceFileInputFormat.class);
+    job.setInputFormatClass(SequenceFileInputFormat.class);
 
     // Set which OutputFormat class to use.
-    job.setOutputFormat(TextOutputFormat.class);
+    job.setOutputFormatClass(TextOutputFormat.class);
 
     // Set the output data types.
     job.setOutputKeyClass(Text.class);
@@ -229,10 +299,11 @@ public class ExampleMetadataStats
     job.setCombinerClass(LongSumReducer.class);
     job.setReducerClass(LongSumReducer.class);
 
-    if (JobClient.runJob(job).isSuccessful())
+    if (job.waitForCompletion(true)) {
       return 0;
-    else
+    } else {
       return 1;
+    }
   }
 
   /**
