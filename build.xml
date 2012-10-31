@@ -17,11 +17,16 @@
   <property file="${basedir}/build.properties"/>
 
   <!-- ensure that 'hadoop.path' is set -->
-  <fail message="Please define the 'hadoop.path' property in this 'build.properties' file">
+  <fail message="Please define the 'hadoop.path' and 'pig.path' properties in the 'build.properties' file">
     <condition>
-      <not>
-        <isset property="hadoop.path"/>
-      </not>
+      <or>
+        <not>
+          <isset property="hadoop.path"/>
+        </not>
+        <not>
+          <isset property="pig.path"/>
+        </not>
+      </or>
     </condition>
   </fail>
 
@@ -51,6 +56,9 @@
           <include name="**/log4j-*.jar"/>
           <include name="**/junit-*.jar"/>
         </fileset>
+      	<fileset dir="${hadoop.path}">
+      	  <include name="**/pig-*withouthadoop.jar"/>
+      	</fileset>
         <fileset dir="lib">
           <include name="**/*.jar"/>
         </fileset>
