@@ -1,25 +1,31 @@
-Norvig Award Examples
-=====================
+Norvig ... Award Examples
+=========================
 
 This is a branch of the original [common crawl examples](https://github.com/commoncrawl/commoncrawl-examples),
 adapted to be used as a starting point for your entry to the [Norvig ... Award](http://www.sara.nl)
 
-Examples
---------
+Included examples
+-----------------
 
-### [Example MapReduce code](https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples)
+### Example MapReduce code
+
+See the code for all examples [here](https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples)
 
 * [org.commoncrawl.examples.ExampleArcMicroformat](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroformat.java) - An example showing how to analyze the Common Crawl ARC web content files.
 * [org.commoncrawl.examples.ExampleMetadataDomainPageCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount.java) - An example showing how to use the Common Crawl 'metadata' files to quickly gather high level information about the corpus' content.
 * [org.commoncrawl.examples.ExampleMetadataStats](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java) - An example showing how to use the Common Crawl 'metadata' files to quickly gather high level information about the corpus' content.
 * [org.commoncrawl.examples.ExampleTextWordCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java) - An example showing how to use the Common Crawl 'textData' files to efficiently work with Common Crawl corpus text content.
 
+
 ### Example Pig script
 
 * [example.pig](https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig) - An example counting the occurrences of HTTP status codes
 
+
 Building the jar
 ----------------
+
+**If you are a participant you can skip to step 3, since are probably running our VM (if you are, but you don't, then check the mail that confirms your approval)**
 
 ### Prerequisites
 
@@ -48,6 +54,13 @@ From within the commoncrawl-examples directory, run:
 
     $ ant
 
+
+Running the ExampleTextWordCount
+--------------------------------
+
+Open a shell, and run:
+
+    $ hadoop jar dist/lib/commoncrawl-examples-1.0.1.jar org.commoncrawl.examples.ExampleTextWordCount 
 
 
 Using the Common Crawl ARC files in MapReduce and Pig
