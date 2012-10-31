@@ -1,8 +1,8 @@
 package org.commoncrawl.examples;
 
-// Java classes
 import java.io.IOException;
 import java.net.URI;
+import java.util.StringTokenizer;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
@@ -11,22 +11,17 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.TextOutputFormat;
-import org.apache.hadoop.mapred.lib.LongSumReducer;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.reduce.LongSumReducer;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
-// Apache Project classes
-// Hadoop classes
 
 /**
  * An example showing how to use the Common Crawl 'textData' files to efficiently
@@ -37,45 +32,50 @@ import org.apache.log4j.Logger;
 public class ExampleTextWordCount extends Configured implements Tool {
 
   private static final Logger LOG = Logger.getLogger(ExampleTextWordCount.class);
+  private static final String ARGNAME_INPATH = "-in";
+  private static final String ARGNAME_OUTPATH = "-out";
+  private static final String ARGNAME_CONF = "-conf";
+  private static final String ARGNAME_OVERWRITE = "-overwrite";
+  private static final String ARGNAME_MAXFILES = "-maxfiles";
+  private static final String ARGNAME_NUMREDUCE = "-numreducers";
+  
+  protected static enum MAPPERCOUNTER {
+    RECORDS_IN,
+    EMPTY_PAGE_TEXT,
+    EXCEPTIONS
+  }
 
   /**
    * Perform a simple word count mapping on text data from the Common Crawl corpus.
    */
-  public static class ExampleTextWordCountMapper
-      extends    MapReduceBase 
-      implements Mapper<Text, Text, Text, LongWritable> {
+  protected static class ExampleTextWordCountMapper
+      extends Mapper<Text, Text, Text, LongWritable> {
 
-    // create a counter group for Mapper-specific statistics
-    private final String _counterGroup = "Custom Mapper Counters";
+    private StringTokenizer tokenizer;
+    private Text outKey = new Text();
+    private LongWritable outVal = new LongWritable();
 
-    public void map(Text key, Text value, OutputCollector<Text, LongWritable> output, Reporter reporter)
+    @Override
+    public void map(Text key, Text value, Context context)
         throws IOException {
 
-      reporter.incrCounter(this._counterGroup, "Records In", 1);
+      context.getCounter(MAPPERCOUNTER.RECORDS_IN).increment(1);
 
       try {
-
-        // Get the text content as a string.
-        String pageText = value.toString();
-
-        // Removes all punctuation.
-        pageText = pageText.replaceAll("[^a-zA-Z0-9 ]", "");
-
-        // Normalizes whitespace to single spaces.
-        pageText = pageText.replaceAll("\\s+", " ");
-
-        if (pageText == null || pageText == "") {
-          reporter.incrCounter(this._counterGroup, "Skipped - Empty Page Text", 1);
-        }
-
-        // Splits by space and outputs to OutputCollector.
-        for (String word : pageText.split(" ")) {
-          output.collect(new Text(word.toLowerCase()), new LongWritable(1));
+        tokenizer = new StringTokenizer(value.toString());
+        if (!tokenizer.hasMoreTokens()) {
+          context.getCounter(MAPPERCOUNTER.EMPTY_PAGE_TEXT).increment(1);
+        } else {
+          while (tokenizer.hasMoreTokens()) {
+            outKey.set(tokenizer.nextToken());
+            outVal.set(1);
+            context.write(outKey, outVal);
+          }
         }
       }
       catch (Exception ex) {
         LOG.error("Caught Exception", ex);
-        reporter.incrCounter(this._counterGroup, "Exceptions", 1);
+        context.getCounter(MAPPERCOUNTER.EXCEPTIONS).increment(1);
       }
     }
   }
@@ -86,24 +86,41 @@ public class ExampleTextWordCount extends Configured implements Tool {
    *
    * @author Chris Stephens <chris@commoncrawl.org>
    */
-  public static class SampleFilter
+  protected static class SampleFilter
       implements PathFilter {
 
-    private static int count =         0;
-    private static int max   = 999999999;
+    private static int count =  0;
+    private static long max   = -1;
+    
+    protected static void setMax(long newmax) {
+      max = newmax;
+    }
 
+    @Override
     public boolean accept(Path path) {
 
       if (!path.getName().startsWith("textData-"))
         return false;
 
-      SampleFilter.count++;
-
-      if (SampleFilter.count > SampleFilter.max)
+      count++;
+      
+      if (max < 0 || count > max)
         return false;
 
       return true;
     }
+  }
+  
+  public void usage() {
+    System.out.println("\n  org.commoncrawl.examples.ExampleTextWordCount \n" +
+                         "                           " + ARGNAME_INPATH +" <inputpath>\n" +
+                         "                           " + ARGNAME_OUTPATH + " <outputpath>\n" +
+                         "                         [ " + ARGNAME_OVERWRITE + " ]\n" +
+                         "                         [ " + ARGNAME_NUMREDUCE + " <number_of_reducers> ]\n" +
+                         "                         [ " + ARGNAME_CONF + " <conffile> ]\n" +
+                         "                         [ " + ARGNAME_MAXFILES + " <maxfiles> ]");
+    System.out.println("");
+    GenericOptionsParser.printGenericCommandUsage(System.out);
   }
 
   /**
@@ -114,26 +131,43 @@ public class ExampleTextWordCount extends Configured implements Tool {
    * @return      0 if the Hadoop job completes successfully, 1 if not. 
    */
   @Override
-  public int run(String[] args)
-      throws Exception {
-
+  public int run(String[] args) throws Exception {
+    
+    String inputPath = null;
     String outputPath = null;
     String configFile = null;
+    boolean overwrite = false;
+    int numReducers = 1;
 
-    // Read the command line arguments.
-    if (args.length <  1)
-      throw new IllegalArgumentException("Example JAR must be passed an output path.");
-
-    outputPath = args[0];
-
-    if (args.length >= 2)
-      configFile = args[1];
-
-    // For this example, only look at a single text file.
-    String inputPath = "s3n://aws-publicdatasets/common-crawl/parse-output/segment/1341690166822/textData-01666";
- 
-    // Switch to this if you'd like to look at all text files.  May take many minutes just to read the file listing.
-  //String inputPath = "s3n://aws-publicdatasets/common-crawl/parse-output/segment/*/textData-*";
+    // Read the command line arguments. We're not using GenericOptionsParser
+    // to prevent having to include commons.cli as a dependency.
+    for (int i = 0; i < args.length; i++) {
+      try {
+        if (args[i].equals(ARGNAME_INPATH)) {
+          inputPath = args[++i];
+        } else if (args[i].equals(ARGNAME_OUTPATH)) {
+          outputPath = args[++i];
+        } else if (args[i].equals(ARGNAME_CONF)) {
+          configFile = args[++i];
+        } else if (args[i].equals(ARGNAME_MAXFILES)) {
+          SampleFilter.setMax(Long.parseLong(args[++i]));
+        } else if (args[i].equals(ARGNAME_OVERWRITE)) {
+          overwrite = true;
+        } else if (args[i].equals(ARGNAME_NUMREDUCE)) {
+          numReducers = Integer.parseInt(args[++i]);
+        } else {
+          LOG.warn("Unsupported argument: " + args[i]);
+        }
+      } catch (ArrayIndexOutOfBoundsException e) {
+        usage();
+        throw new IllegalArgumentException();
+      }
+    }
+    
+    if (inputPath == null || outputPath == null) {
+      usage();
+      throw new IllegalArgumentException();
+    }
 
     // Read in any additional config parameters.
     if (configFile != null) {
@@ -141,34 +175,36 @@ public class ExampleTextWordCount extends Configured implements Tool {
       this.getConf().addResource(configFile);
     }
 
-    // Creates a new job configuration for this Hadoop job.
-    JobConf job = new JobConf(this.getConf());
-
+    // Create the Hadoop job.
+    Configuration conf = getConf();
+    Job job = new Job(conf);
     job.setJarByClass(ExampleTextWordCount.class);
+    job.setNumReduceTasks(numReducers);
 
     // Scan the provided input path for ARC files.
     LOG.info("setting input path to '"+ inputPath + "'");
     FileInputFormat.addInputPath(job, new Path(inputPath));
     FileInputFormat.setInputPathFilter(job, SampleFilter.class);
 
-    // Delete the output path directory if it already exists.
-    LOG.info("clearing the output path at '" + outputPath + "'");
-
-    FileSystem fs = FileSystem.get(new URI(outputPath), job);
-
-    if (fs.exists(new Path(outputPath)))
-      fs.delete(new Path(outputPath), true);
-
+    // Delete the output path directory if it already exists and user wants to overwrite it.
+    if (overwrite) {
+      LOG.info("clearing the output path at '" + outputPath + "'");
+      FileSystem fs = FileSystem.get(new URI(outputPath), conf);
+      if (fs.exists(new Path(outputPath))) {
+        fs.delete(new Path(outputPath), true);
+      }
+    }
+    
     // Set the path where final output 'part' files will be saved.
     LOG.info("setting output path to '" + outputPath + "'");
     FileOutputFormat.setOutputPath(job, new Path(outputPath));
     FileOutputFormat.setCompressOutput(job, false);
 
     // Set which InputFormat class to use.
-    job.setInputFormat(SequenceFileInputFormat.class);
+    job.setInputFormatClass(SequenceFileInputFormat.class);
 
     // Set which OutputFormat class to use.
-    job.setOutputFormat(TextOutputFormat.class);
+    job.setOutputFormatClass(TextOutputFormat.class);
 
     // Set the output data types.
     job.setOutputKeyClass(Text.class);
@@ -178,10 +214,11 @@ public class ExampleTextWordCount extends Configured implements Tool {
     job.setMapperClass(ExampleTextWordCount.ExampleTextWordCountMapper.class);
     job.setReducerClass(LongSumReducer.class);
 
-    if (JobClient.runJob(job).isSuccessful())
+    if (job.waitForCompletion(true)) {
       return 0;
-    else
+    } else {
       return 1;
+    }
   }
 
   /**
