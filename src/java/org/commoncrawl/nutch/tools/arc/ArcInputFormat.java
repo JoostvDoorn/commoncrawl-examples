@@ -20,12 +20,10 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.RecordReader;
-import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 
 /**
  * A input format the reads arc files.
@@ -40,11 +38,12 @@ public class ArcInputFormat
    * @param job The job configuration.
    * @param reporter The progress reporter.
    */
-  public RecordReader<Text, BytesWritable> getRecordReader(InputSplit split,
-      JobConf job, Reporter reporter)
+  public RecordReader<Text, BytesWritable> createRecordReader(InputSplit split,
+      TaskAttemptContext context)
     throws IOException {
-    reporter.setStatus(split.toString());
-    return new ArcRecordReader(job, (FileSplit)split);
+    context.setStatus(split.toString());
+    
+    return new ArcRecordReader();
   }
 
 }

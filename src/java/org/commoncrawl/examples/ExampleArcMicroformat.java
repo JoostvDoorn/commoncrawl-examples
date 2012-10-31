@@ -1,56 +1,36 @@
 package org.commoncrawl.examples;
 
 // Java classes
-import java.lang.IllegalArgumentException;
-import java.lang.Integer;
-import java.lang.Math;
-import java.lang.OutOfMemoryError;
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 
-// log4j classes
-import org.apache.log4j.Logger;
-
-// Hadoop classes
-import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataOutputStream;
-import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileInputFormat;
-import org.apache.hadoop.mapred.FileOutputFormat;
-import org.apache.hadoop.mapred.InputSplit;
-import org.apache.hadoop.mapred.JobClient;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.TextOutputFormat;
-import org.apache.hadoop.mapred.lib.LongSumReducer;
-import org.apache.hadoop.util.Progressable;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.mapreduce.lib.reduce.LongSumReducer;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-
-// Common Crawl classes
+import org.apache.log4j.Logger;
 import org.commoncrawl.hadoop.mapred.ArcInputFormat;
 import org.commoncrawl.hadoop.mapred.ArcRecord;
-
-// jsoup classes
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+// log4j classes
+// Hadoop classes
+// Common Crawl classes
+// jsoup classes
 
 /**
  * An example showing how to analyze the Common Crawl ARC web content files.
@@ -62,6 +42,7 @@ public class ExampleArcMicroformat
     implements Tool {
 
   private static final Logger LOG = Logger.getLogger(ExampleArcMicroformat.class);
+  private Configuration conf;
 
   /**
    * Maps incoming web documents to a list of Microformat 'itemtype' tags.
@@ -75,8 +56,7 @@ public class ExampleArcMicroformat
    * @author Steve Salevan
    */
   public static class ExampleArcMicroformatMapper
-      extends    MapReduceBase
-      implements Mapper<Text, ArcRecord, Text, LongWritable> {
+      extends    Mapper<Text, ArcRecord, Text, LongWritable> {
  
     // create a counter group for Mapper-specific statistics
     private final String _counterGroup = "Custom Mapper Counters";
@@ -167,6 +147,7 @@ public class ExampleArcMicroformat
   public int run(String[] args)
       throws Exception {
 
+    conf = getConf();
     String outputPath = null;
     String configFile = null;
 
@@ -180,7 +161,7 @@ public class ExampleArcMicroformat
       configFile = args[1];
 
     // For this example, only look at a single ARC files.
-    String inputPath   = "s3n://aws-publicdatasets/common-crawl/parse-output/segment/1341690163490/1341782443295_1551.arc.gz";
+    String inputPath   = "/data/public/common-crawl/parse-output/segment/1346823845675/1346864466526_10.arc.gz";
  
     // Switch to this if you'd like to look at all ARC files.  May take many minutes just to read the file listing.
   //String inputPath   = "s3n://aws-publicdatasets/common-crawl/parse-output/segment/*/*.arc.gz";
@@ -188,12 +169,11 @@ public class ExampleArcMicroformat
     // Read in any additional config parameters.
     if (configFile != null) {
       LOG.info("adding config parameters from '"+ configFile + "'");
-      this.getConf().addResource(configFile);
+      conf.addResource(configFile);
     }
 
-    // Creates a new job configuration for this Hadoop job.
-    JobConf job = new JobConf(this.getConf());
-
+    Job job = new Job(conf);
+    
     job.setJarByClass(ExampleArcMicroformat.class);
 
     // Scan the provided input path for ARC files.
@@ -204,7 +184,7 @@ public class ExampleArcMicroformat
     // Delete the output path directory if it already exists.
     LOG.info("clearing the output path at '" + outputPath + "'");
 
-    FileSystem fs = FileSystem.get(new URI(outputPath), job);
+    FileSystem fs = FileSystem.get(new URI(outputPath), conf);
 
     if (fs.exists(new Path(outputPath)))
       fs.delete(new Path(outputPath), true);
@@ -215,10 +195,10 @@ public class ExampleArcMicroformat
     FileOutputFormat.setCompressOutput(job, false);
 
     // Set which InputFormat class to use.
-    job.setInputFormat(ArcInputFormat.class);
+    job.setInputFormatClass(ArcInputFormat.class);
 
     // Set which OutputFormat class to use.
-    job.setOutputFormat(TextOutputFormat.class);
+    job.setOutputFormatClass(TextOutputFormat.class);
 
     // Set the output data types.
     job.setOutputKeyClass(Text.class);
@@ -228,10 +208,10 @@ public class ExampleArcMicroformat
     job.setMapperClass(ExampleArcMicroformat.ExampleArcMicroformatMapper.class);
     job.setReducerClass(LongSumReducer.class);
 
-    if (JobClient.runJob(job).isSuccessful())
-      return 0;
-    else
+    if (!job.waitForCompletion(true))
       return 1;
+    else
+      return 0;
   }
 
   /**

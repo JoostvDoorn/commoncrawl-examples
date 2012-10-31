@@ -1,25 +1,19 @@
 package org.commoncrawl.hadoop.mapred;
 
-import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-
-import java.lang.Math;
-import java.lang.StringBuffer;
-import java.util.Arrays;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.RecordReader;
-
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.log4j.Logger;
-
 import org.commoncrawl.compressors.gzip.GzipCompressorInputStream;
 
 /**
@@ -29,19 +23,26 @@ import org.commoncrawl.compressors.gzip.GzipCompressorInputStream;
  * buffered from S3.
  */
 public class ArcRecordReader
-    implements RecordReader<Text, ArcRecord> {
+    extends RecordReader<Text, ArcRecord> {
 
   private static final Logger LOG = Logger.getLogger(ArcRecordReader.class);
 
   private FSDataInputStream         _fsin;
   private GzipCompressorInputStream _gzip;
   private long                      _fileLength;
+  private Text                      _key;
+  private ArcRecord                 _value;
+  private Configuration             _conf;
 
   /**
    *
    */
-  public ArcRecordReader(Configuration job, FileSplit split)
+  public void initialize(InputSplit insplit, TaskAttemptContext context)
       throws IOException { 
+    
+    _conf = context.getConfiguration();
+    
+    FileSplit split = (FileSplit)insplit;
 
     if (split.getStart() != 0) {
       IOException ex = new IOException("Invalid ARC file split start " + split.getStart() + ": ARC files are not splittable");
@@ -52,7 +53,7 @@ public class ArcRecordReader
     // open the file and seek to the start of the split
     final Path file = split.getPath();
 
-    FileSystem fs = file.getFileSystem(job);
+    FileSystem fs = file.getFileSystem(context.getConfiguration());
 
     this._fsin = fs.open(file);
 
@@ -100,14 +101,16 @@ public class ArcRecordReader
   /**
    * 
    */
-  public synchronized boolean next(Text key, ArcRecord value)
-      throws IOException {
+  public synchronized boolean nextKeyValue() throws IOException, InterruptedException {
 
     boolean isValid = true;
     
+    _key = (Text)ReflectionUtils.newInstance(Text.class, _conf);
+    _value = (ArcRecord)ReflectionUtils.newInstance(ArcRecord.class, _conf);
+    
     // try reading an ARC record from the stream
     try {
-      isValid = value.readFrom(this._gzip);
+      isValid = _value.readFrom(this._gzip);
     }
     catch (EOFException ex) {
       return false;
@@ -120,8 +123,8 @@ public class ArcRecordReader
       return true;
     }
 
-    if (value.getURL() != null)
-      key.set(value.getURL());
+    if (_value.getURL() != null)
+      _key.set(_value.getURL());
 
     // check to make sure we've reached the end of the GZIP member
     int n = this._gzip.read(_checkBuffer, 0, 64);
@@ -161,6 +164,16 @@ public class ArcRecordReader
 
     if (this._gzip != null)
       this._gzip.close(); 
+  }
+
+  @Override
+  public Text getCurrentKey() throws IOException, InterruptedException {
+    return _key;
+  }
+
+  @Override
+  public ArcRecord getCurrentValue() throws IOException, InterruptedException {
+    return _value;
   }
 
 }

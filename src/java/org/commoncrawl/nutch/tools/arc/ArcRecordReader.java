@@ -31,8 +31,10 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.FileSplit;
-import org.apache.hadoop.mapred.RecordReader;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.RecordReader;
+import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 
@@ -51,7 +53,7 @@ import org.apache.hadoop.util.StringUtils;
  * see {@link http://www.grub.org/ }
  */
 public class ArcRecordReader
-  implements RecordReader<Text, BytesWritable> {
+  extends RecordReader<Text, BytesWritable> {
 
   private static final Logger LOG = Logger.getLogger(ArcRecordReader.class);
 
@@ -62,6 +64,8 @@ public class ArcRecordReader
   protected long splitLen = 0;
   protected long fileLen = 0;
   protected FSDataInputStream in;
+  protected Text key;
+  protected BytesWritable value;
 
   private static byte[] MAGIC = {(byte)0x1F, (byte)0x8B};
 
@@ -99,9 +103,11 @@ public class ArcRecordReader
    * 
    * @throws IOException  If an IO error occurs while initializing file split.
    */
-  public ArcRecordReader(Configuration conf, FileSplit split)
+  @Override
+  public void initialize(InputSplit insplit, TaskAttemptContext context)
     throws IOException {
 
+    FileSplit split = (FileSplit)insplit;
     Path path = split.getPath();
     FileSystem fs = path.getFileSystem(conf);
     fileLen = fs.getFileStatus(split.getPath()).getLen();
@@ -124,8 +130,8 @@ public class ArcRecordReader
   /**
    * Creates a new instance of the <code>Text</code> object for the key.
    */
-  public Text createKey() {
-    return (Text)ReflectionUtils.newInstance(Text.class, conf);
+  public Text getCurrentKey() {
+    return key;
   }
 
   /**
@@ -176,8 +182,8 @@ public class ArcRecordReader
    * 
    * @throws IOException If an error occurs while reading the record value.
    */
-  public boolean next(Text key, BytesWritable value)
-    throws IOException {
+  
+  public boolean nextKeyValue() throws IOException, InterruptedException {
 
     try {
       
@@ -267,10 +273,10 @@ public class ArcRecordReader
         System.arraycopy(content, eol + 1, raw, 0, raw.length);
         
         // populate key and values with the header and raw content.
-        Text keyText = (Text)key;
-        keyText.set(header);
-        BytesWritable valueBytes = (BytesWritable)value;
-        valueBytes.set(raw, 0, raw.length);
+        key = (Text)ReflectionUtils.newInstance(Text.class, conf);
+        key.set(header);
+        value = (BytesWritable)ReflectionUtils.newInstance(BytesWritable.class, conf);
+        value.set(raw, 0, raw.length);
 
         // TODO: It would be best to start at the end of the gzip read but 
         // the bytes read in gzip don't match raw bytes in the file so we 
@@ -290,5 +296,11 @@ public class ArcRecordReader
     
     // couldn't populate the record or there is no next record to read
     return false;
+  }
+
+  @Override
+  public BytesWritable getCurrentValue() throws IOException,
+      InterruptedException {
+    return value;
   }
 }
