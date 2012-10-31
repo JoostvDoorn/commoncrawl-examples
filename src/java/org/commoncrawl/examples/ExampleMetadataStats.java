@@ -8,7 +8,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -42,6 +41,7 @@ public class ExampleMetadataStats extends Configured implements Tool {
   private static final String ARGNAME_OVERWRITE = "-overwrite";
   private static final String ARGNAME_MAXFILES = "-maxfiles";
   private static final String ARGNAME_NUMREDUCE = "-numreducers";
+  private static final String FILTER_PREFIX = "metadata-";
   
   protected static enum MAPPERCOUNTER {
     INVALID_URLS,
@@ -165,37 +165,6 @@ public class ExampleMetadataStats extends Configured implements Tool {
     }
   }
   
-  /**
-   * Hadoop FileSystem PathFilter for MetaData files, allowing users to limit the
-   * number of files processed.
-   *
-   * @author Chris Stephens <chris@commoncrawl.org>
-   */
-  protected static class SampleFilter
-      implements PathFilter {
-
-    private static int count =  0;
-    private static long max   = -1;
-    
-    protected static void setMax(long newmax) {
-      max = newmax;
-    }
-
-    @Override
-    public boolean accept(Path path) {
-
-      if (!path.getName().startsWith("metadata-"))
-        return false;
-
-      count++;
-      
-      if (max < 0 || count > max)
-        return false;
-
-      return true;
-    }
-  }
-
   public void usage() {
     System.out.println("\n  org.commoncrawl.examples.ExampleMetadataStats \n" +
                          "                           " + ARGNAME_INPATH +" <inputpath>\n" +
@@ -267,6 +236,7 @@ public class ExampleMetadataStats extends Configured implements Tool {
     job.setNumReduceTasks(numReducers);
 
     LOG.info("adding input path '" + inputPath + "'");
+    SampleFilter.setPrefix(FILTER_PREFIX);
     FileInputFormat.addInputPath(job, new Path(inputPath));
     FileInputFormat.setInputPathFilter(job, SampleFilter.class);
 
