@@ -44,7 +44,11 @@ public class ArcLoader extends LoadFunc {
       }
       t.set(4, value.getIpAddress());
       t.set(5, value.getURL());
-      t.set(6, value.getParsedHTML().toString());
+      if (value.getParsedHTML() != null) {
+        t.set(6, value.getParsedHTML().toString());
+      } else {
+        t.set(6, null);
+      }
       t.set(7, value.getPayload());
       return t;
     } catch (InterruptedException e) {
