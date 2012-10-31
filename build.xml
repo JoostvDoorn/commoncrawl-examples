@@ -26,7 +26,7 @@
   </fail>
 
   <property name="lib"   location="lib"  />
-  <property name="src"   location="src"  />
+  <property name="src"   location="src/java"  />
   <property name="build" location="build"/>
   <property name="dist"  location="dist" />
   <property name="test"  location="test" />
@@ -46,6 +46,7 @@
       <classpath>
         <pathelement path="${classpath}"/>
         <fileset dir="${hadoop.path}">
+          <include name="**/commons-logging-*.jar"/>
           <include name="**/hadoop-core-*.jar"/>
           <include name="**/log4j-*.jar"/>
           <include name="**/junit-*.jar"/>
