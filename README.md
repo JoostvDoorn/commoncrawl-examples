@@ -18,8 +18,27 @@ Examples
 
 * [example.pig](https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig) - An example counting the occurrences of HTTP status codes
 
+Running the examples
+--------------------
+
+### Prerequisites
+
+You need to have the following software installed:
+
+* [JDK 6](http://www.oracle.com/technetwork/java/index.html)
+* [Git](http://git-scm.com/)
+* [Ant](http://ant.apache.org/)
+* [Apache Hadoop 0.20.2](http://hadoop.apache.org/)
+* [Apache Pig](http://pig.apache.org/)
+
+### Step 1: check out the code
+
+    $ git clone https://github.com/norvigaward/commoncrawl-examples.git
+
+### Step 2: 
+
 Using the Common Crawl ARC files in MapReduce and Pig
-----------------------------------------
+-----------------------------------------------------
 
 These examples come with an InputFormat for MapReduce and a Loader for Pig:
 
