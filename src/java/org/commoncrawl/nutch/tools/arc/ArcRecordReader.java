@@ -107,11 +107,11 @@ public class ArcRecordReader
   public void initialize(InputSplit insplit, TaskAttemptContext context)
     throws IOException {
 
+    this.conf = context.getConfiguration();
     FileSplit split = (FileSplit)insplit;
     Path path = split.getPath();
-    FileSystem fs = path.getFileSystem(conf);
+    FileSystem fs = path.getFileSystem(context.getConfiguration());
     fileLen = fs.getFileStatus(split.getPath()).getLen();
-    this.conf = conf;
     this.in = fs.open(split.getPath());
     this.splitStart = split.getStart();
     this.splitEnd = splitStart + split.getLength();
@@ -229,7 +229,6 @@ public class ArcRecordReader
         // seek to the start of the gzip header
         in.seek(startRead);
         ByteArrayOutputStream baos = null;
-        int totalRead = 0;
 
         try {
           
@@ -240,7 +239,6 @@ public class ArcRecordReader
           baos = new ByteArrayOutputStream();
           while ((gzipRead = zin.read(buffer, 0, buffer.length)) != -1) {
             baos.write(buffer, 0, gzipRead);
-            totalRead += gzipRead;
           }
         }
         catch (Exception e) {

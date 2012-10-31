@@ -119,14 +119,6 @@ public class ExampleMetadataStats
 
           output.collect(new Text("TLD\t"+publicSuffix), new LongWritable(1));
 
-          // Output the private domain
-          // WARNING - This dramatically increases the size of the output.
-          String privateDomain = "[invalid]";
-
-          if (domainObj.topPrivateDomain() != null)
-            privateDomain = domainObj.topPrivateDomain().name().trim().toLowerCase();
-
-          //output.collect(new Text("Domain\t"+privateDomain), new LongWritable(1));
         }
         catch (URISyntaxException ex) {
           output.collect(new Text("TLD\t[invalid URL]"), new LongWritable(1));

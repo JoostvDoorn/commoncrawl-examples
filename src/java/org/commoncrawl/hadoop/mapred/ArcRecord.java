@@ -4,43 +4,31 @@ import java.io.ByteArrayInputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.EOFException;
-import java.io.InputStream;
 import java.io.IOException;
-import java.lang.IllegalArgumentException;
-import java.lang.Integer;
-import java.lang.Math;
-import java.lang.NumberFormatException;
+import java.io.InputStream;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-// Hadoop classes
 import org.apache.hadoop.io.Writable;
-
-// Apache log4j classes
-import org.apache.log4j.Logger;
-
-// Apache HTTP Components classes
 import org.apache.http.Header;
-import org.apache.http.HeaderElement;
 import org.apache.http.HttpException;
 import org.apache.http.HttpResponse;
-import org.apache.http.StatusLine;
-import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.ContentType;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.DefaultHttpResponseFactory;
 import org.apache.http.impl.io.AbstractSessionInputBuffer;
 import org.apache.http.impl.io.DefaultHttpResponseParser;
-import org.apache.http.io.SessionInputBuffer;
-import org.apache.http.message.BasicHeader;
-import org.apache.http.message.BasicHeaderValueParser;
 import org.apache.http.message.BasicLineParser;
 import org.apache.http.params.BasicHttpParams;
-
-// Jsoup classes
+import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+// Hadoop classes
+// Apache log4j classes
+// Apache HTTP Components classes
+// Jsoup classes
 
 /**
  * An entry in an ARC (Internet Archive) data file.
@@ -70,8 +58,6 @@ public class ArcRecord
 
   private HttpResponse _httpResponse;
 
-  private int _httpContentStart;
-
   /**
    * <p>Creates an empty ARC record.</p>
    */
@@ -94,7 +80,6 @@ public class ArcRecord
 
     // read a line of content
     int b = in.read();
-    int n = 1;
 
     // if -1 is returned, we are at EOF
     if (b == -1)
@@ -109,7 +94,6 @@ public class ArcRecord
       line.append((char) b);
 
       b = in.read();
-      n++;
     }
     while (b != -1);
 

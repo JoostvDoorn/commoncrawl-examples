@@ -89,8 +89,6 @@ public class ExampleMetadataDomainPageCount
         JsonParser jsonParser = new JsonParser();
         JsonObject jsonObj    = jsonParser.parse(json).getAsJsonObject();
 
-        int httpCode;
-
         if (jsonObj.has("http_result") == false) {
           reporter.incrCounter(this._counterGroup, "HTTP Code Missing", 1);
           return;
