@@ -45,6 +45,7 @@ Examples
 See the code for all examples [here](https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples)
 
 All examples support the same arguments:
+
     org.commoncrawl.examples.Example*
                              -in <inputpath>
                              -out <outputpath>
@@ -54,12 +55,12 @@ All examples support the same arguments:
                            [ -maxfiles <maxfiles> ]
 
 Where:
-`-in` - Point to the path of your input files. You can use globbing if your Hadoop distribution supports it.
-`-out` - Point to the path to store the output files.
-`-overwrite` - If output path exists, this switch will allow the example to overwrite the existing directory.
-`-numreducers` - Set the maximum amount of reducers to run. Defaults to a single reducer.
-`-conf` - Path to additional configuration.
-`-maxfiles` - Maximum amount of files to process.
+* `-in` - Point to the path of your input files. You can use globbing if your Hadoop distribution supports it.
+* `-out` - Point to the path to store the output files.
+* `-overwrite` - If output path exists, this switch will allow the example to overwrite the existing directory.
+* `-numreducers` - Set the maximum amount of reducers to run. Defaults to a single reducer.
+* `-conf` - Path to additional configuration.
+* `-maxfiles` - Maximum amount of files to process.
 
 These examples are included:
 * [org.commoncrawl.examples.ExampleArcMicroformat](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroformat.java) - An example showing how to analyze the Common Crawl ARC web content files.
