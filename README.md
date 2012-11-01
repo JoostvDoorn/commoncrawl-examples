@@ -68,18 +68,22 @@ These examples are included:
 * [org.commoncrawl.examples.ExampleMetadataStats](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java) - An example showing how to use the Common Crawl 'metadata' files to quickly gather high level information about the corpus' content.
 * [org.commoncrawl.examples.ExampleTextWordCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java) - An example showing how to use the Common Crawl 'textData' files to efficiently work with Common Crawl corpus text content.
 
+### Running the MapReduce examples
+
+To run the an example on maximally 5 input files, open a shell and run:
+
+    $ hadoop jar dist/lib/commoncrawl-examples-1.0.1.jar [EXAMPLECLASS] -in [INPUT] -out [OUTPUT] -maxfiles 5
+
+For org.commoncrawl.examples.ExampleMetadataStats that would be
+
+    $ hadoop jar dist/lib/commoncrawl-examples-1.0.1.jar org.commoncrawl.examples.ExampleMetadataStats -in [INPUT] -out [OUTPUT] -maxfiles 5
+
+You can use this same command for each included example.
+
 
 ### Example Pig script
 
 * [example.pig](https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig) - An example counting the occurrences of HTTP status codes
-
-
-Running the ExampleTextWordCount
---------------------------------
-
-Open a shell, and run:
-
-    $ hadoop jar dist/lib/commoncrawl-examples-1.0.1.jar org.commoncrawl.examples.ExampleTextWordCount 
 
 
 Using the Common Crawl ARC files in MapReduce and Pig
