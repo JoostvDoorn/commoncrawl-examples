@@ -1,6 +1,5 @@
 package org.commoncrawl.examples;
 
-// Java classes
 import java.io.IOException;
 import java.net.URI;
 
@@ -8,17 +7,15 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.PathFilter;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.mapreduce.lib.reduce.LongSumReducer;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
@@ -27,22 +24,30 @@ import org.commoncrawl.hadoop.mapred.ArcRecord;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-// log4j classes
-// Hadoop classes
-// Common Crawl classes
-// jsoup classes
 
 /**
  * An example showing how to analyze the Common Crawl ARC web content files.
  * 
  * @author Chris Stephens <chris@commoncrawl.org>
  */
-public class ExampleArcMicroformat
-    extends    Configured
-    implements Tool {
+public class ExampleArcMicroformat extends Configured implements Tool {
 
   private static final Logger LOG = Logger.getLogger(ExampleArcMicroformat.class);
-  private Configuration conf;
+  private static final String ARGNAME_INPATH = "-in";
+  private static final String ARGNAME_OUTPATH = "-out";
+  private static final String ARGNAME_CONF = "-conf";
+  private static final String ARGNAME_OVERWRITE = "-overwrite";
+  private static final String ARGNAME_MAXFILES = "-maxfiles";
+  private static final String ARGNAME_NUMREDUCE = "-numreducers";
+  private static final String FILEFILTER = ".arc.gz";
+  
+  protected static enum MAPPERCOUNTER {
+    NOT_RECOGNIZED_AS_HTML,
+    HTML_PARSE_FAILURE,
+    HTML_PAGE_TOO_LARGE,
+    EXCEPTIONS,
+    OUT_OF_MEMORY
+  }
 
   /**
    * Maps incoming web documents to a list of Microformat 'itemtype' tags.
@@ -55,45 +60,45 @@ public class ExampleArcMicroformat
    * @author Manu Sporny 
    * @author Steve Salevan
    */
-  public static class ExampleArcMicroformatMapper
-      extends    Mapper<Text, ArcRecord, Text, LongWritable> {
+  public static class ExampleArcMicroformatMapper extends Mapper<Text, ArcRecord, Text, LongWritable> {
+    
+    private Document doc;
+    private Elements mf;
+    private LongWritable outVal = new LongWritable(1);
  
-    // create a counter group for Mapper-specific statistics
-    private final String _counterGroup = "Custom Mapper Counters";
-
-    public void map(Text key, ArcRecord value, OutputCollector<Text, LongWritable> output, Reporter reporter)
-        throws IOException {
+    public void map(Text key, ArcRecord value, Context context) throws IOException {
 
       try {
 
         if (!value.getContentType().contains("html")) {
-          reporter.incrCounter(this._counterGroup, "Skipped - Not HTML", 1);
+          context.getCounter(MAPPERCOUNTER.NOT_RECOGNIZED_AS_HTML).increment(1);
           return;
         }
 
         // just curious how many of each content type we've seen
-        reporter.incrCounter(this._counterGroup, "Content Type - "+value.getContentType(), 1);
+        // TODO: How can we handle this in the new API?
+        //reporter.incrCounter(this._counterGroup, "Content Type - "+value.getContentType(), 1);
 
         // ensure sample instances have enough memory to parse HTML
         if (value.getContentLength() > (5 * 1024 * 1024)) {
-          reporter.incrCounter(this._counterGroup, "Skipped - HTML Too Long", 1);
+          context.getCounter(MAPPERCOUNTER.HTML_PAGE_TOO_LARGE).increment(1);
           return;
         }
 
         // Count all 'itemtype' attributes referencing 'schema.org'
-        Document doc = value.getParsedHTML();
+        doc = value.getParsedHTML();
 
         if (doc == null) {
-          reporter.incrCounter(this._counterGroup, "Skipped - Unable to Parse HTML", 1);
+          context.getCounter(MAPPERCOUNTER.HTML_PARSE_FAILURE).increment(1);
           return;
         }
 
-        Elements mf = doc.select("[itemtype~=schema.org]");
+        mf = doc.select("[itemtype~=schema.org]");
 
         if (mf.size() > 0) {
           for (Element e : mf) {
             if (e.hasAttr("itemtype")) {
-              output.collect(new Text(e.attr("itemtype").toLowerCase().trim()), new LongWritable(1));
+              context.write(new Text(e.attr("itemtype").toLowerCase().trim()), outVal);
             }
           }
         }
@@ -101,39 +106,27 @@ public class ExampleArcMicroformat
       catch (Throwable e) {
 
         // occassionally Jsoup parser runs out of memory ...
-        if (e.getClass().equals(OutOfMemoryError.class))
+        if (e.getClass().equals(OutOfMemoryError.class)) {
+          context.getCounter(MAPPERCOUNTER.OUT_OF_MEMORY).increment(1);
           System.gc();
+        }
 
         LOG.error("Caught Exception", e);
-        reporter.incrCounter(this._counterGroup, "Skipped - Exception Thrown", 1);
+        context.getCounter(MAPPERCOUNTER.EXCEPTIONS).increment(1);
       }
     }
   }
-
-  /**
-   * Hadoop FileSystem PathFilter for ARC files, allowing users to limit the
-   * number of files processed.
-   *
-   * @author Chris Stephens <chris@commoncrawl.org>
-   */
-  public static class SampleFilter
-      implements PathFilter {
-
-    private static int count =         0;
-    private static int max   = 999999999;
-
-    public boolean accept(Path path) {
-
-      if (!path.getName().endsWith(".arc.gz"))
-        return false;
-
-      SampleFilter.count++;
-
-      if (SampleFilter.count > SampleFilter.max)
-        return false;
-
-      return true;
-    }
+  
+  public void usage() {
+    System.out.println("\n  org.commoncrawl.examples.ExampleArcMicroformat \n" +
+                         "                           " + ARGNAME_INPATH +" <inputpath>\n" +
+                         "                           " + ARGNAME_OUTPATH + " <outputpath>\n" +
+                         "                         [ " + ARGNAME_OVERWRITE + " ]\n" +
+                         "                         [ " + ARGNAME_NUMREDUCE + " <number_of_reducers> ]\n" +
+                         "                         [ " + ARGNAME_CONF + " <conffile> ]\n" +
+                         "                         [ " + ARGNAME_MAXFILES + " <maxfiles> ]");
+    System.out.println("");
+    GenericOptionsParser.printGenericCommandUsage(System.out);
   }
 
   /**
@@ -144,51 +137,71 @@ public class ExampleArcMicroformat
    * @return      0 if the Hadoop job completes successfully, 1 if not. 
    */
   @Override
-  public int run(String[] args)
-      throws Exception {
+  public int run(String[] args) throws Exception {
 
-    conf = getConf();
+    String inputPath = null;
     String outputPath = null;
     String configFile = null;
+    boolean overwrite = false;
+    int numReducers = 1;
 
-    // Read the command line arguments.
-    if (args.length <  1)
-      throw new IllegalArgumentException("Example JAR must be passed an output path.");
-
-    outputPath = args[0];
-
-    if (args.length >= 2)
-      configFile = args[1];
-
-    // For this example, only look at a single ARC files.
-    String inputPath   = "/data/public/common-crawl/parse-output/segment/1346823845675/1346864466526_10.arc.gz";
- 
-    // Switch to this if you'd like to look at all ARC files.  May take many minutes just to read the file listing.
-  //String inputPath   = "s3n://aws-publicdatasets/common-crawl/parse-output/segment/*/*.arc.gz";
+    // Read the command line arguments. We're not using GenericOptionsParser
+    // to prevent having to include commons.cli as a dependency.
+    for (int i = 0; i < args.length; i++) {
+      try {
+        if (args[i].equals(ARGNAME_INPATH)) {
+          inputPath = args[++i];
+        } else if (args[i].equals(ARGNAME_OUTPATH)) {
+          outputPath = args[++i];
+        } else if (args[i].equals(ARGNAME_CONF)) {
+          configFile = args[++i];
+        } else if (args[i].equals(ARGNAME_MAXFILES)) {
+          SampleFilter.setMax(Long.parseLong(args[++i]));
+        } else if (args[i].equals(ARGNAME_OVERWRITE)) {
+          overwrite = true;
+        } else if (args[i].equals(ARGNAME_NUMREDUCE)) {
+          numReducers = Integer.parseInt(args[++i]);
+        } else {
+          LOG.warn("Unsupported argument: " + args[i]);
+        }
+      } catch (ArrayIndexOutOfBoundsException e) {
+        usage();
+        throw new IllegalArgumentException();
+      }
+    }
+    
+    if (inputPath == null || outputPath == null) {
+      usage();
+      throw new IllegalArgumentException();
+    }
 
     // Read in any additional config parameters.
     if (configFile != null) {
       LOG.info("adding config parameters from '"+ configFile + "'");
-      conf.addResource(configFile);
+      this.getConf().addResource(configFile);
     }
 
+    // Create the Hadoop job.
+    Configuration conf = getConf();
     Job job = new Job(conf);
-    
-    job.setJarByClass(ExampleArcMicroformat.class);
+    job.setJarByClass(ExampleTextWordCount.class);
+    job.setNumReduceTasks(numReducers);
 
     // Scan the provided input path for ARC files.
     LOG.info("setting input path to '"+ inputPath + "'");
+    SampleFilter.setFilter(FILEFILTER);
     FileInputFormat.addInputPath(job, new Path(inputPath));
     FileInputFormat.setInputPathFilter(job, SampleFilter.class);
 
-    // Delete the output path directory if it already exists.
-    LOG.info("clearing the output path at '" + outputPath + "'");
-
-    FileSystem fs = FileSystem.get(new URI(outputPath), conf);
-
-    if (fs.exists(new Path(outputPath)))
-      fs.delete(new Path(outputPath), true);
-
+    // Delete the output path directory if it already exists and user wants to overwrite it.
+    if (overwrite) {
+      LOG.info("clearing the output path at '" + outputPath + "'");
+      FileSystem fs = FileSystem.get(new URI(outputPath), conf);
+      if (fs.exists(new Path(outputPath))) {
+        fs.delete(new Path(outputPath), true);
+      }
+    }
+    
     // Set the path where final output 'part' files will be saved.
     LOG.info("setting output path to '" + outputPath + "'");
     FileOutputFormat.setOutputPath(job, new Path(outputPath));
@@ -208,10 +221,11 @@ public class ExampleArcMicroformat
     job.setMapperClass(ExampleArcMicroformat.ExampleArcMicroformatMapper.class);
     job.setReducerClass(LongSumReducer.class);
 
-    if (!job.waitForCompletion(true))
-      return 1;
-    else
+    if (job.waitForCompletion(true)) {
       return 0;
+    } else {
+      return 1;
+    }
   }
 
   /**
