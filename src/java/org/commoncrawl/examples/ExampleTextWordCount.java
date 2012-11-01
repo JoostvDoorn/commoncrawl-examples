@@ -37,7 +37,7 @@ public class ExampleTextWordCount extends Configured implements Tool {
   private static final String ARGNAME_OVERWRITE = "-overwrite";
   private static final String ARGNAME_MAXFILES = "-maxfiles";
   private static final String ARGNAME_NUMREDUCE = "-numreducers";
-  private static final String FILTER_PREFIX = "textData-";
+  private static final String FILEFILTER = "textData-";
   
   protected static enum MAPPERCOUNTER {
     RECORDS_IN,
@@ -151,7 +151,7 @@ public class ExampleTextWordCount extends Configured implements Tool {
 
     // Scan the provided input path for ARC files.
     LOG.info("setting input path to '"+ inputPath + "'");
-    SampleFilter.setPrefix(FILTER_PREFIX);
+    SampleFilter.setFilter(FILEFILTER);
     FileInputFormat.addInputPath(job, new Path(inputPath));
     FileInputFormat.setInputPathFilter(job, SampleFilter.class);
 

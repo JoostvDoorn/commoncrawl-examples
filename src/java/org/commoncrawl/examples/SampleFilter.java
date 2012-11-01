@@ -13,10 +13,10 @@ public class SampleFilter implements PathFilter {
 
   private static int count =  0;
   private static long max   = -1;
-  private static String prefx = "";
+  private static String filter = "";
   
-  public static void setPrefix(String prefix) {
-    prefx = prefix;
+  public static void setFilter(String filter) {
+    SampleFilter.filter = filter;
   }
   
   protected static void setMax(long newmax) {
@@ -26,13 +26,15 @@ public class SampleFilter implements PathFilter {
   @Override
   public boolean accept(Path path) {
 
-    if (!path.getName().startsWith(prefx))
+    if (!path.getName().contains(filter)) {
       return false;
+    }
 
     count++;
     
-    if (max < 0 || count > max)
+    if (max < 0 || count > max) {
       return false;
+    }
 
     return true;
   }

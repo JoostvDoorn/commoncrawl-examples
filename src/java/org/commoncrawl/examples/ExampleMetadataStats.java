@@ -41,7 +41,7 @@ public class ExampleMetadataStats extends Configured implements Tool {
   private static final String ARGNAME_OVERWRITE = "-overwrite";
   private static final String ARGNAME_MAXFILES = "-maxfiles";
   private static final String ARGNAME_NUMREDUCE = "-numreducers";
-  private static final String FILTER_PREFIX = "metadata-";
+  private static final String FILEFILTER = "metadata-";
   
   protected static enum MAPPERCOUNTER {
     INVALID_URLS,
@@ -236,7 +236,7 @@ public class ExampleMetadataStats extends Configured implements Tool {
     job.setNumReduceTasks(numReducers);
 
     LOG.info("adding input path '" + inputPath + "'");
-    SampleFilter.setPrefix(FILTER_PREFIX);
+    SampleFilter.setFilter(FILEFILTER);
     FileInputFormat.addInputPath(job, new Path(inputPath));
     FileInputFormat.setInputPathFilter(job, SampleFilter.class);
 
