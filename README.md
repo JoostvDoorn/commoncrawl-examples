@@ -1,13 +1,18 @@
-Norvig ... Award Examples
-=========================
+Norvig Best Web Study Award Examples
+====================================
 
-This is a branch of the original [common crawl examples](https://github.com/commoncrawl/commoncrawl-examples),
-adapted to be used as a starting point for your entry to the [Norvig ... Award](http://www.sara.nl)
+This is a branch of the original [common crawl examples][1], adapted to be used
+as a starting point for your entry to the [Norvig Best Web Study Award][2].
+
+[1]: https://github.com/commoncrawl/commoncrawl-examples
+[2]: http://norvigaward.github.com 
 
 Building the jar
 ----------------
 
-**If you are a participant you can skip to step 3, since are probably running our VM (if you are, but you don't, then check the mail that confirms your approval)**
+**If you are a participant you can skip to step 3, since are probably running
+our VM (if you are, but you don't, then check the mail that confirms your
+approval)**
 
 ### Prerequisites
 
@@ -27,7 +32,8 @@ You need to have the following software installed:
 
 ### Step 2: set path to Hadoop and Pig
 
-Open `build.properties` and set `hadoop.path` and `pig.path` to the full path of respectively your Hadoop and Pig distributions.
+Open `build.properties` and set `hadoop.path` and `pig.path` to the full path
+of respectively your Hadoop and Pig distributions.
 
 
 ### Step 3: build and package the examples
@@ -42,7 +48,9 @@ Examples
 
 ### Example MapReduce code
 
-See the code for all examples [here](https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples)
+See the code for all examples [on github][3].
+
+[3]: https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples
 
 All examples support the same arguments:
 
@@ -55,18 +63,30 @@ All examples support the same arguments:
                            [ -maxfiles <maxfiles> ]
 
 Where:
-* `-in` - Point to the path of your input files. You can use globbing if your Hadoop distribution supports it.
-* `-out` - Point to the path to store the output files.
-* `-overwrite` - If output path exists, this switch will allow the example to overwrite the existing directory.
-* `-numreducers` - Set the maximum amount of reducers to run. Defaults to a single reducer.
-* `-conf` - Path to additional configuration.
-* `-maxfiles` - Maximum amount of files to process.
+
+ * `-in` - Point to the path of your input files. You can use globbing if your
+   Hadoop distribution supports it.
+ * `-out` - Point to the path to store the output files.
+ * `-overwrite` - If output path exists, this switch will allow the example to
+   overwrite the existing directory.
+ * `-numreducers` - Set the maximum amount of reducers to run. Defaults to a
+   single reducer.
+ * `-conf` - Path to additional configuration.
+ * `-maxfiles` - Maximum amount of files to process.
 
 These examples are included:
-* [org.commoncrawl.examples.ExampleArcMicroformat](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroformat.java) - An example showing how to analyze the Common Crawl ARC web content files.
-* [org.commoncrawl.examples.ExampleMetadataDomainPageCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount.java) - An example showing how to use the Common Crawl 'metadata' files to quickly gather high level information about the corpus' content.
-* [org.commoncrawl.examples.ExampleMetadataStats](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java) - An example showing how to use the Common Crawl 'metadata' files to quickly gather high level information about the corpus' content.
-* [org.commoncrawl.examples.ExampleTextWordCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java) - An example showing how to use the Common Crawl 'textData' files to efficiently work with Common Crawl corpus text content.
+
+ * [org.commoncrawl.examples.ExampleArcMicroformat](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroformat.java)
+   - An example showing how to analyze the Common Crawl ARC web content files.
+ * [org.commoncrawl.examples.ExampleMetadataDomainPageCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount.java)
+   - An example showing how to use the Common Crawl 'metadata' files to quickly
+     gather high level information about the corpus' content.
+ * [org.commoncrawl.examples.ExampleMetadataStats](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java)
+   - An example showing how to use the Common Crawl 'metadata' files to quickly
+     gather high level information about the corpus' content.
+ * [org.commoncrawl.examples.ExampleTextWordCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java)
+   - An example showing how to use the Common Crawl 'textData' files to
+   efficiently work with Common Crawl corpus text content.
 
 ### Running the MapReduce examples
 
@@ -80,10 +100,9 @@ For org.commoncrawl.examples.ExampleMetadataStats that would be
 
 You can use this same command for each included example.
 
-
 ### Example Pig script
 
-* [example.pig](https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig) - An example counting the occurrences of HTTP status codes
+ * [example.pig](https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig) - An example counting the occurrences of HTTP status codes
 
 
 Using the Common Crawl ARC files in MapReduce and Pig
@@ -91,7 +110,8 @@ Using the Common Crawl ARC files in MapReduce and Pig
 
 These examples come with an InputFormat for MapReduce and a Loader for Pig:
 
-* [ArcInputFormat, ArcRecordReader, and ArcRecord](https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/hadoop/mapred)
-* [ArcLoader](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/pig/ArcLoader.java)
+ * [ArcInputFormat, ArcRecordReader, and ArcRecord](https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/hadoop/mapred)
+ * [ArcLoader](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/pig/ArcLoader.java)
 
-The above examples should show you how to load the Common Crawl ARC files using these classes.
+The above examples should show you how to load the Common Crawl ARC files using
+these classes.
