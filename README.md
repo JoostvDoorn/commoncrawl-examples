@@ -22,9 +22,9 @@ Overview of the examples
 
 ### Example MapReduce code
 
-See the code for all examples [on github][3].
+See the code for all examples [on github][4].
 
-[3]: https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples
+[4]: https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples
 
 All examples support the same arguments:
 
