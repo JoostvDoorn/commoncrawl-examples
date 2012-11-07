@@ -30,12 +30,14 @@ public class SampleFilter implements PathFilter {
       return false;
     }
 
-    count++;
+    if (max < 0) {
+      return true;
+    }
     
-    if (max < 0 || count > max) {
+    if (max < count) {
       return false;
     }
-
+    
     return true;
   }
 }
