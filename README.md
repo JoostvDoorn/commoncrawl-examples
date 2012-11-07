@@ -1,50 +1,24 @@
-Norvig Best Web Study Award Examples
-====================================
+# Norvig Web Data Science Award Examples
+======================================
 
 This is a branch of the original [common crawl examples][1], adapted to be used
-as a starting point for your entry to the [Norvig Best Web Study Award][2].
+as a starting point for your entry to the [Norvig Web Data Science Award][2].
 
 [1]: https://github.com/commoncrawl/commoncrawl-examples
 [2]: http://norvigaward.github.com 
 
-Building the jar
-----------------
 
-**If you are a participant you can skip to step 3, since are probably running
-our VM (if you are, but you don't, then check the mail that confirms your
-approval)**
+Getting started
+---------------
 
-### Prerequisites
+We recommend using the virtual machine image as development environment as
+descriped on the [contest website][3].
 
-You need to have the following software installed:
-
-* [JDK 6](http://www.oracle.com/technetwork/java/index.html)
-* [Git](http://git-scm.com/)
-* [Ant](http://ant.apache.org/)
-* [Apache Hadoop 0.20.2](http://hadoop.apache.org/)
-* [Apache Pig](http://pig.apache.org/)
+[3]: http://norvigaward.github.com/getstarted.html
 
 
-### Step 1: check out the code
-
-    $ git clone https://github.com/norvigaward/commoncrawl-examples.git
-
-
-### Step 2: set path to Hadoop and Pig
-
-Open `build.properties` and set `hadoop.path` and `pig.path` to the full path
-of respectively your Hadoop and Pig distributions.
-
-
-### Step 3: build and package the examples
-
-From within the commoncrawl-examples directory, run:
-
-    $ ant
-
-
-Examples
------------------
+Overview of the examples
+------------------------
 
 ### Example MapReduce code
 
@@ -87,6 +61,14 @@ These examples are included:
  * [org.commoncrawl.examples.ExampleTextWordCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java)
    - An example showing how to use the Common Crawl 'textData' files to
    efficiently work with Common Crawl corpus text content.
+
+
+### Build and package the examples
+
+From within the commoncrawl-examples directory, run:
+
+    $ ant
+
 
 ### Running the MapReduce examples
 
