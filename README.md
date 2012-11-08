@@ -1,20 +1,21 @@
-# Norvig Web Data Science Award Examples
+Norvig Web Data Science Award Examples
 ======================================
 
-This is a branch of the original [common crawl examples][1], adapted to be used
-as a starting point for your entry to the [Norvig Web Data Science Award][2].
+This is a branch of the original [common crawl examples][0.1], adapted to be
+used as a starting point for your entry to the [Norvig Web Data Science
+Award][0.2].
 
-[1]: https://github.com/commoncrawl/commoncrawl-examples
-[2]: http://norvigaward.github.com 
+[0.1]: https://github.com/commoncrawl/commoncrawl-examples
+[0.2]: http://norvigaward.github.com 
 
 
 Getting started
 ---------------
 
 We recommend using the virtual machine image as development environment as
-descriped on the [contest website][3].
+described on the [contest website][1.1].
 
-[3]: http://norvigaward.github.com/getstarted.html
+[1.1]: http://norvigaward.github.com/getstarted.html
 
 
 Overview of the examples
@@ -22,9 +23,7 @@ Overview of the examples
 
 ### Example MapReduce code
 
-See the code for all examples [on github][4].
-
-[4]: https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples
+See the code for all examples [on github][2.1].
 
 All examples support the same arguments:
 
@@ -39,28 +38,37 @@ All examples support the same arguments:
 Where:
 
  * `-in` - Point to the path of your input files. You can use globbing if your
-   Hadoop distribution supports it.
+     Hadoop distribution supports it.
  * `-out` - Point to the path to store the output files.
  * `-overwrite` - If output path exists, this switch will allow the example to
-   overwrite the existing directory.
+     overwrite the existing directory.
  * `-numreducers` - Set the maximum amount of reducers to run. Defaults to a
-   single reducer.
+     single reducer.
  * `-conf` - Path to additional configuration.
  * `-maxfiles` - Maximum amount of files to process.
 
 These examples are included:
 
- * [org.commoncrawl.examples.ExampleArcMicroformat](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroformat.java)
-   - An example showing how to analyze the Common Crawl ARC web content files.
- * [org.commoncrawl.examples.ExampleMetadataDomainPageCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount.java)
-   - An example showing how to use the Common Crawl 'metadata' files to quickly
-     gather high level information about the corpus' content.
- * [org.commoncrawl.examples.ExampleMetadataStats](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java)
-   - An example showing how to use the Common Crawl 'metadata' files to quickly
-     gather high level information about the corpus' content.
- * [org.commoncrawl.examples.ExampleTextWordCount](https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java)
-   - An example showing how to use the Common Crawl 'textData' files to
-   efficiently work with Common Crawl corpus text content.
+* [org.commoncrawl.examples.ExampleArcMicroformat][2.2]  
+An example showing how to analyze the Common Crawl ARC web content files.
+
+* [org.commoncrawl.examples.ExampleMetadataDomainPageCount][2.3]  
+An example showing how to use the Common Crawl 'metadata' files to quickly
+gather high level information about the corpus' content.
+
+* [org.commoncrawl.examples.ExampleMetadataStats][2.4]  
+An example showing how to use the Common Crawl 'metadata' files to quickly
+gather high level information about the corpus' content.
+
+* [org.commoncrawl.examples.ExampleTextWordCount][2.5]
+An example showing how to use the Common Crawl 'textData' files to efficiently
+work with Common Crawl corpus text content.
+
+[2.1]: https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples
+[2.2]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroFormat
+[2.3]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount
+[2.4]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java
+[2.5]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java
 
 
 ### Build and package the examples
