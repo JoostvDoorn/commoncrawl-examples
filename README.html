@@ -1,8 +1,7 @@
 <h1>Norvig Web Data Science Award Examples</h1>
 
-<p>This is a branch of the original <a href="https://github.com/commoncrawl/commoncrawl-examples">common crawl examples</a>, adapted to be
-used as a starting point for your entry to the <a href="http://norvigaward.github.com">Norvig Web Data Science
-Award</a>.</p>
+<p>This is a fork of the original <a href="https://github.com/commoncrawl/commoncrawl-examples">CommonCrawl examples</a>, adapted to be used
+as a starting point for your entry to the <a href="http://norvigaward.github.com">Norvig Web Data Science Award</a>.</p>
 
 <h2>Getting started</h2>
 
@@ -13,7 +12,7 @@ described on the <a href="http://norvigaward.github.com/getstarted.html">contest
 
 <h3>Example MapReduce code</h3>
 
-<p>See the code for all examples <a href="https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples">on github</a>.</p>
+<p>See the code for all examples <a href="https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples">on Github</a>.</p>
 
 <p>All examples support the same arguments:</p>
 
@@ -29,31 +28,36 @@ described on the <a href="http://norvigaward.github.com/getstarted.html">contest
 <p>Where:</p>
 
 <ul>
-<li><code>-in</code> - Point to the path of your input files. You can use globbing if your
- Hadoop distribution supports it.</li>
-<li><code>-out</code> - Point to the path to store the output files.</li>
-<li><code>-overwrite</code> - If output path exists, this switch will allow the example to
- overwrite the existing directory.</li>
-<li><code>-numreducers</code> - Set the maximum amount of reducers to run. Defaults to a
- single reducer.</li>
-<li><code>-conf</code> - Path to additional configuration.</li>
-<li><code>-maxfiles</code> - Maximum amount of files to process.</li>
+<li><code>-in</code> <br />
+Point to the path of your input files. You can use globbing if your Hadoop
+distribution supports it.</li>
+<li><code>-out</code> <br />
+Point to the path to store the output files.</li>
+<li><code>-overwrite</code> <br />
+If output path exists, this switch will allow the example to overwrite the
+existing directory.</li>
+<li><code>-numreducers</code> <br />
+Set the maximum amount of reducers to run. Defaults to a single reducer.</li>
+<li><code>-conf</code> <br />
+Path to additional configuration.</li>
+<li><code>-maxfiles</code> <br />
+Maximum amount of files to process.</li>
 </ul>
 
 <p>These examples are included:</p>
 
 <ul>
 <li><p><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroFormat">org.commoncrawl.examples.ExampleArcMicroformat</a> <br />
-An example showing how to analyze the Common Crawl ARC web content files.</p></li>
+An example showing how to analyze the CommonCrawl ARC web content files.</p></li>
 <li><p><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount">org.commoncrawl.examples.ExampleMetadataDomainPageCount</a> <br />
-An example showing how to use the Common Crawl 'metadata' files to quickly
+An example showing how to use the CommonCrawl 'metadata' files to quickly
 gather high level information about the corpus' content.</p></li>
 <li><p><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java">org.commoncrawl.examples.ExampleMetadataStats</a> <br />
-An example showing how to use the Common Crawl 'metadata' files to quickly
+An example showing how to use the CommonCrawl 'metadata' files to quickly
 gather high level information about the corpus' content.</p></li>
 <li><p><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java">org.commoncrawl.examples.ExampleTextWordCount</a>
-An example showing how to use the Common Crawl 'textData' files to efficiently
-work with Common Crawl corpus text content.</p></li>
+An example showing how to use the CommonCrawl 'textData' files to efficiently
+work with CommonCrawl corpus text content.</p></li>
 </ul>
 
 <h3>Build and package the examples</h3>
@@ -80,10 +84,11 @@ work with Common Crawl corpus text content.</p></li>
 <h3>Example Pig script</h3>
 
 <ul>
-<li><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig">example.pig</a> - An example counting the occurrences of HTTP status codes</li>
+<li><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig">example.pig</a> <br />
+An example counting the occurrences of HTTP status codes</li>
 </ul>
 
-<h2>Using the Common Crawl ARC files in MapReduce and Pig</h2>
+<h2>Using the CommonCrawl ARC files in MapReduce and Pig</h2>
 
 <p>These examples come with an InputFormat for MapReduce and a Loader for Pig:</p>
 
@@ -92,5 +97,5 @@ work with Common Crawl corpus text content.</p></li>
 <li><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/pig/ArcLoader.java">ArcLoader</a></li>
 </ul>
 
-<p>The above examples should show you how to load the Common Crawl ARC files using
+<p>The above examples should show you how to load the CommonCrawl ARC files using
 these classes.</p>
