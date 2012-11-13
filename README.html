@@ -62,10 +62,16 @@ work with CommonCrawl corpus text content.</p></li>
 
 <h3>Build and package the examples</h3>
 
-<p>From within the commoncrawl-examples directory, run:</p>
+<p>In the terminal you can build and package the examples by moving to the
+commoncrawl-examples directory ~/git/commoncrawl-examples and run:</p>
 
 <pre><code>$ ant
 </code></pre>
+
+<p>Inside Eclipse you can build the project by selecting "Project → Build Project"
+from the menu bar. </p>
+
+<p>Both methods wil create a jar bundle in ~/git/commoncrawl-examples/dist/lib.</p>
 
 <h3>Running the MapReduce examples</h3>
 
@@ -81,12 +87,21 @@ work with CommonCrawl corpus text content.</p></li>
 
 <p>You can use this same command for each included example.</p>
 
+<p>The Eclipse project includes a run configuration for the ExampleTextWordCount
+example. You can select it from the "Run" menu entry. You can use this run
+configuration as a template for other configurations.</p>
+
 <h3>Example Pig script</h3>
 
 <ul>
-<li><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig">example.pig</a> <br />
-An example counting the occurrences of HTTP status codes</li>
+<li><a href="https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig">example.pig</a>  </li>
 </ul>
+
+<p>An example counting the occurrences of HTTP status codes. You can run the pig
+script from the terminal by moving to the examples directory and run:</p>
+
+<pre><code>$ pig example.pig
+</code></pre>
 
 <h2>Using the CommonCrawl ARC files in MapReduce and Pig</h2>
 

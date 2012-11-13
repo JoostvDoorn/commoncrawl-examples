@@ -77,9 +77,15 @@ work with CommonCrawl corpus text content.
 
 ### Build and package the examples
 
-From within the commoncrawl-examples directory, run:
+In the terminal you can build and package the examples by moving to the
+commoncrawl-examples directory ~/git/commoncrawl-examples and run:
 
     $ ant
+
+Inside Eclipse you can build the project by selecting "Project → Build Project"
+from the menu bar. 
+
+Both methods wil create a jar bundle in ~/git/commoncrawl-examples/dist/lib.
 
 
 ### Running the MapReduce examples
@@ -94,10 +100,19 @@ For org.commoncrawl.examples.ExampleMetadataStats that would be
 
 You can use this same command for each included example.
 
+The Eclipse project includes a run configuration for the ExampleTextWordCount
+example. You can select it from the "Run" menu entry. You can use this run
+configuration as a template for other configurations.
+
+
 ### Example Pig script
 
  * [example.pig][2.6]  
-An example counting the occurrences of HTTP status codes
+
+An example counting the occurrences of HTTP status codes. You can run the pig
+script from the terminal by moving to the examples directory and run:
+
+    $ pig example.pig
 
 [2.6]: https://github.com/norvigaward/commoncrawl-examples/blob/master/example.pig
 
