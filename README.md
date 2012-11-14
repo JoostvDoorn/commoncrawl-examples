@@ -69,8 +69,8 @@ An example showing how to use the CommonCrawl 'textData' files to efficiently
 work with CommonCrawl corpus text content.
 
 [2.1]: https://github.com/norvigaward/commoncrawl-examples/tree/master/src/java/org/commoncrawl/examples
-[2.2]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroFormat
-[2.3]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount
+[2.2]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleArcMicroformat.java
+[2.3]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataDomainPageCount.java
 [2.4]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleMetadataStats.java
 [2.5]: https://github.com/norvigaward/commoncrawl-examples/blob/master/src/java/org/commoncrawl/examples/ExampleTextWordCount.java
 
