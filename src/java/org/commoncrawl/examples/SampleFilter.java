@@ -34,7 +34,7 @@ public class SampleFilter implements PathFilter {
       return true;
     }
     
-    if (max < count) {
+    if (max < ++count) {
       return false;
     }
     
