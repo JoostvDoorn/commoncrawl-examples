@@ -30,15 +30,19 @@ public class ArcLoader extends LoadFunc {
   @Override
   public Tuple getNext() throws IOException {
     try {
-      boolean notDone = in.nextKeyValue();
-      if (!notDone) {
-        return null;
-      }
-      ArcRecord value = in.getCurrentValue();
-      try {
-        value.getHttpResponse();
-      } catch (HttpException e) {
-        LOG.error(e.getMessage(), e);
+      ArcRecord value = null;
+      while (value == null) {
+        boolean notDone = in.nextKeyValue();
+        if (!notDone) {
+          return null;
+        }
+        value = in.getCurrentValue();
+        try {
+          value.getHttpResponse();
+        } catch (HttpException e) {
+          LOG.error(e.getMessage(), e);
+          value = null;
+        }
       }
       Tuple t = mTupleFactory.newTuple(8);
       t.set(0, value.getArchiveDate().toString());
