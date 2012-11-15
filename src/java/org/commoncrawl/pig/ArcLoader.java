@@ -8,17 +8,20 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.http.HttpException;
+import org.apache.log4j.Logger;
 import org.apache.pig.LoadFunc;
 import org.apache.pig.backend.hadoop.executionengine.mapReduceLayer.PigSplit;
 import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 import org.commoncrawl.hadoop.mapred.ArcInputFormat;
 import org.commoncrawl.hadoop.mapred.ArcRecord;
+import org.mortbay.log.Log;
 
 public class ArcLoader extends LoadFunc {
 
   private RecordReader<Text, ArcRecord> in;
   private TupleFactory mTupleFactory = TupleFactory.getInstance();
+  private static final Logger LOG = Logger.getLogger(ArcLoader.class);
 
   @Override
   public InputFormat<Text, ArcRecord> getInputFormat() throws IOException {
@@ -33,6 +36,11 @@ public class ArcLoader extends LoadFunc {
         return null;
       }
       ArcRecord value = in.getCurrentValue();
+      try {
+        value.getHttpResponse();
+      } catch (HttpException e) {
+        LOG.error(e.getMessage(), e);
+      }
       Tuple t = mTupleFactory.newTuple(8);
       t.set(0, value.getArchiveDate().toString());
       t.set(1, value.getContentLength());
@@ -44,7 +52,7 @@ public class ArcLoader extends LoadFunc {
       }
       t.set(4, value.getIpAddress());
       t.set(5, value.getURL());
-      if (value.getParsedHTML() != null) {
+      if (value.getContentType().toLowerCase().contains("html")) {
         t.set(6, value.getParsedHTML().toString());
       } else {
         t.set(6, null);
