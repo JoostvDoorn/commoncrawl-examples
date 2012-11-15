@@ -15,7 +15,6 @@ import org.apache.pig.data.Tuple;
 import org.apache.pig.data.TupleFactory;
 import org.commoncrawl.hadoop.mapred.ArcInputFormat;
 import org.commoncrawl.hadoop.mapred.ArcRecord;
-import org.mortbay.log.Log;
 
 public class ArcLoader extends LoadFunc {
 
