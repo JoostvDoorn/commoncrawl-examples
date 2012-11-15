@@ -6,6 +6,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputSplit;
+import org.apache.hadoop.mapreduce.JobContext;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -40,7 +41,7 @@ public class ArcInputFormat extends FileInputFormat<Text, ArcRecord> {
    * 3 blocks (2 blocks on Hadoop systems with 128MB block size).
    * </p>
    */
-  protected boolean isSplitable(FileSystem fs, Path filename) {
+  protected boolean isSplitable(JobContext context, org.apache.hadoop.fs.Path filename) {
     return false;
   }
 }
