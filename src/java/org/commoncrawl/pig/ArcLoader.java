@@ -40,7 +40,7 @@ public class ArcLoader extends LoadFunc {
         try {
           value.getHttpResponse();
         } catch (HttpException e) {
-          LOG.error(e.getMessage(), e);
+          LOG.debug(e.getMessage());
           value = null;
         }
       }
