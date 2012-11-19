@@ -44,7 +44,11 @@ public class ArcLoader extends LoadFunc {
           value = null;
         }
       }
-      Tuple t = mTupleFactory.newTuple(8);
+      /**
+       * This is where you can put other data in. Nasically anything you can find
+       * in org.commoncrawl.hadoop.mapred.ArcRecord you can put into the Tuple. 
+       */
+      Tuple t = mTupleFactory.newTuple(7);
       t.set(0, value.getArchiveDate().toString());
       t.set(1, value.getContentLength());
       t.set(2, value.getContentType());
@@ -60,7 +64,6 @@ public class ArcLoader extends LoadFunc {
       } else {
         t.set(6, null);
       }
-      t.set(7, value.getPayload());
       return t;
     } catch (InterruptedException e) {
       throw new IOException("Error getting input");
