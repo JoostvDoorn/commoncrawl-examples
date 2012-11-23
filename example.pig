@@ -4,9 +4,9 @@ register /home/participant/git/commoncrawl-examples/dist/lib/commoncrawl-example
 
 a = LOAD '/home/participant/data/*.arc.gz' USING org.commoncrawl.pig.ArcLoader() as (date, length, type, statuscode, ipaddress, url, html);
 
-words = foreach a generate flatten(statuscode) as codes;
+words = foreach a generate flatten(type) as types;
 
-grpd = group words by codes; 
+grpd = group words by types; 
 
 cntd = foreach grpd generate group, COUNT(words); 
 
