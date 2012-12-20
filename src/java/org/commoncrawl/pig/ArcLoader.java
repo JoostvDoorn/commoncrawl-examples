@@ -76,6 +76,8 @@ private static final boolean USE_JSOUP = true;
       return t;
     } catch (InterruptedException e) {
       throw new IOException("Error getting input");
+    } catch (NullPointerException npe) {
+    	return null;
     }
   }
 
