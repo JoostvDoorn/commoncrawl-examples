@@ -1,7 +1,6 @@
 package org.commoncrawl.pig;
 
 import java.io.IOException;
-
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.InputFormat;
 import org.apache.hadoop.mapreduce.Job;
@@ -16,6 +15,26 @@ import org.apache.pig.data.TupleFactory;
 import org.commoncrawl.hadoop.mapred.ArcInputFormat;
 import org.commoncrawl.hadoop.mapred.ArcRecord;
 
+
+/**
+ * A Pig Loader for Common Crawl ARC data. It currently provides
+ * a Tuple with 7 values:
+ * 1. archive date
+ * 2. content length
+ * 3. content type
+ * 4. HTTP response code
+ * 5. ip address
+ * 6. URL
+ * 7. the HTML (only if content-type == html, otherwise null)
+ * 
+ * The Loader can provide any data that is contained in an
+ * {@link org.commoncrawl.hadoop.mapred.ArcRecord} by adding data
+ * to the org.apache.pig.data.Tuple t in {@link #getNext()}.
+ * 
+ * @author Evert Lammerts <evert@apache.org>
+ * @see org.commoncrawl.hadoop.mapred.ArcRecord
+ *
+ */
 public class ArcLoader extends LoadFunc {
 
   private RecordReader<Text, ArcRecord> in;
