@@ -18,14 +18,16 @@ import org.commoncrawl.hadoop.mapred.ArcRecord;
 
 /**
  * A Pig Loader for Common Crawl ARC data. It currently provides
- * a Tuple with 7 values:
- * 1. archive date
- * 2. content length
- * 3. content type
- * 4. HTTP response code
- * 5. ip address
- * 6. URL
- * 7. the HTML (only if content-type == html, otherwise null)
+ * a Tuple with these 7 values, in this order:
+ * <ol>
+ * <li>archive date</li>
+ * <li>content length</li>
+ * <li>content type</li>
+ * <li>HTTP response code</li>
+ * <li>ip address</li>
+ * <li>URL</li>
+ * <li>the HTML (only if content-type == html, otherwise null)</li>
+ * </ol>
  * 
  * The Loader can provide any data that is contained in an
  * {@link org.commoncrawl.hadoop.mapred.ArcRecord} by adding data
