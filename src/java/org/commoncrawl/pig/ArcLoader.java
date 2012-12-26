@@ -42,6 +42,9 @@ public class ArcLoader extends LoadFunc {
   private RecordReader<Text, ArcRecord> in;
   private TupleFactory mTupleFactory = TupleFactory.getInstance();
   private static final Logger LOG = Logger.getLogger(ArcLoader.class);
+  
+  // TODO: make this a configuration parameter, but no time.. 
+private static final boolean USE_JSOUP = true;
 
   @Override
   public InputFormat<Text, ArcRecord> getInputFormat() throws IOException {
@@ -81,13 +84,21 @@ public class ArcLoader extends LoadFunc {
       t.set(4, value.getIpAddress());
       t.set(5, value.getURL());
       if (value.getContentType().toLowerCase().contains("html")) {
-        t.set(6, value.getParsedHTML().toString());
+        if (USE_JSOUP) {
+    	  t.set(6, value.getParsedHTML().toString());
+        }
+        else {
+      	  t.set(6, value.getHTML());
+        }
+        
       } else {
         t.set(6, null);
       }
       return t;
     } catch (InterruptedException e) {
       throw new IOException("Error getting input");
+    } catch (NullPointerException npe) {
+    	return null;
     }
   }
 
