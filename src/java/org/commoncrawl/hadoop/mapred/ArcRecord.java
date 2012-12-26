@@ -24,7 +24,6 @@ import org.apache.http.impl.io.AbstractSessionInputBuffer;
 import org.apache.http.impl.io.DefaultHttpResponseParser;
 import org.apache.http.message.BasicLineParser;
 import org.apache.http.params.BasicHttpParams;
-import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
